@@ -1,3 +1,3 @@
 # .UNIVERSE Registry
 
-Providing Additional Functionality.
+Repo Providing Additional Future Functionality.

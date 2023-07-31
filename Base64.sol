@@ -1,4 +1,7 @@
-// Base64 Library - Starts
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.0;
+
 library Base64 {
     bytes internal constant TABLE = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
@@ -6,59 +9,38 @@ library Base64 {
         uint256 len = data.length;
         if (len == 0) return "";
 
-        // multiply by 4/3 rounded up
         uint256 encodedLen = 4 * ((len + 2) / 3);
-        // Add some extra buffer at the end
-        bytes memory result = new bytes(encodedLen + 32);
+        bytes memory result = new bytes(encodedLen);
 
-        bytes memory table = TABLE;
+        uint256 j = 0;
+        uint256 i;
 
-        assembly {
-            let tablePtr := add(table, 1)
-            let resultPtr := add(result, 32)
+        for (i = 0; i < len - (len % 3); i += 3) {
+            uint256 a = uint256(uint8(data[i])) << 16 |
+                        uint256(uint8(data[i + 1])) << 8 |
+                        uint256(uint8(data[i + 2]));
 
-            for {
-                let i := 0
-            } lt(i, len) {
+            result[j++] = TABLE[(a >> 18) & 0x3F];
+            result[j++] = TABLE[(a >> 12) & 0x3F];
+            result[j++] = TABLE[(a >> 6) & 0x3F];
+            result[j++] = TABLE[a & 0x3F];
+        }
 
-            } {
-                i := add(i, 3)
-                let input := and(mload(add(data, i)), 0xffffff)
-
-                let out := mload(add(tablePtr, and(shr(18, input), 0x3F)))
-                out := shl(8, out)
-                out := add(out, and(mload(add(tablePtr, and(shr(12, input), 0x3F))), 0xFF))
-                out := shl(8, out)
-                out := add(out, and(mload(add(tablePtr, and(shr(6, input), 0x3F))), 0xFF))
-                out := shl(8, out)
-                out := add(out, and(mload(add(tablePtr, and(input, 0x3F))), 0xFF))
-                out := shl(224, out)
-
-                if (i >= len) {
-                    out := and(out, 0xFFFFFF00FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF)
-                    if (i = len) {
-                        mstore(add(resultPtr, 28), out)
-                    }
-                    if (i = len - 1) {
-                        mstore(add(resultPtr, 29), shl(8, out))
-                    }
-                    if (i = len - 2) {
-                        mstore(add(resultPtr, 30), shl(16, out))
-                    }
-                    if (i = len - 3) {
-                        mstore(add(resultPtr, 31), shl(24, out))
-                    }
-                    break
-                }
-
-                mstore(resultPtr, out)
-                resultPtr := add(resultPtr, 4)
-            }
-
-            mstore(result, encodedLen)
+        if (len % 3 == 1) {
+            uint256 a = uint256(uint8(data[len - 1])) << 16;
+            result[j++] = TABLE[(a >> 18) & 0x3F];
+            result[j++] = TABLE[(a >> 12) & 0x3F];
+            result[j++] = '=';
+            result[j++] = '=';
+        } else if (len % 3 == 2) {
+            uint256 a = uint256(uint8(data[len - 2])) << 16 |
+                        uint256(uint8(data[len - 1])) << 8;
+            result[j++] = TABLE[(a >> 18) & 0x3F];
+            result[j++] = TABLE[(a >> 12) & 0x3F];
+            result[j++] = TABLE[(a >> 6) & 0x3F];
+            result[j++] = '=';
         }
 
         return string(result);
     }
 }
-// Base64 Library - Ends

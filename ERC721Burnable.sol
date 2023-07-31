@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import "./ERC721.sol";
+import "https://github.com/UnvsCom/UniverseRegistry/blob/main/ERC721.sol";
 
 /**
  * @dev Extension of {ERC721} that allows token holders to destroy their own tokens.
